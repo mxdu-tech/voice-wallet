@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WDK Browser Extension Wallet Test dApp</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      .section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+      }
+
+      .section h2 {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .status-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+      }
+
+      .status-icon.success {
+        background: #10b981;
+      }
+
+      .status-icon.error {
+        background: #ef4444;
+      }
+
+      .status-icon.pending {
+        background: #f59e0b;
+      }
+
+      button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      button:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+      }
+
+      button:disabled {
+        background: #cbd5e1;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .info-box {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 10px;
+        word-break: break-all;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .info-label {
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 5px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      .log-container {
+        max-height: 200px;
+        overflow-y: auto;
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        margin-top: 10px;
+      }
+
+      .log-entry {
+        margin-bottom: 5px;
+        padding: 5px;
+        border-bottom: 1px solid #334155;
+      }
+
+      .log-entry.error {
+        color: #fca5a5;
+      }
+
+      .log-entry.success {
+        color: #86efac;
+      }
+
+      .provider-list {
+        list-style: none;
+        margin-top: 10px;
+      }
+
+      .provider-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .provider-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        flex-shrink: 0;
+      }
+
+      .provider-info {
+        flex: 1;
+      }
+
+      .provider-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 3px;
+      }
+
+      .provider-rdns {
+        font-size: 12px;
+        color: #666;
+        font-family: 'Courier New', monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 WDK Browser Extension Wallet Test dApp</h1>
+      <p class="subtitle">EIP-6963 & EIP-1193 Provider Testing</p>
+
+      <div class="section">
+        <h2>1️⃣ Provider Detection</h2>
+        <div class="status">
+          <div class="status-icon pending" id="eip6963-status"></div>
+          <span>EIP-6963 Providers: <strong id="eip6963-count">0</strong></span>
+        </div>
+        <div class="status">
+          <div class="status-icon pending" id="ethereum-status"></div>
+          <span
+            >window.ethereum:
+            <strong id="ethereum-detected">Checking...</strong></span
+          >
+        </div>
+        <ul class="provider-list" id="provider-list"></ul>
+      </div>
+
+      <div class="section">
+        <h2>2️⃣ Wallet Connection</h2>
+        <button id="connect-btn" onclick="connectWallet()">
+          Connect Wallet
+        </button>
+        <button id="get-accounts-btn" onclick="getAccounts()" disabled>
+          Get Accounts
+        </button>
+        <div id="account-info"></div>
+      </div>
+
+      <div class="section">
+        <h2>3️⃣ Network Info</h2>
+        <button onclick="getChainId()">Get Chain ID</button>
+        <button onclick="switchToSepolia()">Switch to Sepolia</button>
+        <button onclick="switchToMainnet()">Switch to Mainnet</button>
+        <div id="network-info"></div>
+      </div>
+
+      <div class="section">
+        <h2>4️⃣ Event Log</h2>
+        <button onclick="clearLog()">Clear Log</button>
+        <div class="log-container" id="log"></div>
+      </div>
+    </div>
+
+    <script>
+      const detectedProviders = []
+      let selectedProvider = null
+
+      function log(message, type = 'info') {
+        const logContainer = document.getElementById('log')
+        const entry = document.createElement('div')
+        entry.className = `log-entry ${type}`
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`
+        logContainer.appendChild(entry)
+        logContainer.scrollTop = logContainer.scrollHeight
+        console.log(message)
+      }
+
+      function clearLog() {
+        document.getElementById('log').innerHTML = ''
+      }
+
+      window.addEventListener('eip6963:announceProvider', (event) => {
+        const { detail } = event
+        log(`EIP-6963 provider announced: ${detail.info.name}`, 'success')
+
+        detectedProviders.push(detail)
+
+        document.getElementById('eip6963-count').textContent =
+          detectedProviders.length
+        document.getElementById('eip6963-status').className =
+          'status-icon success'
+
+        const providerList = document.getElementById('provider-list')
+        const item = document.createElement('li')
+        item.className = 'provider-item'
+        item.innerHTML = `
+				<img src="${detail.info.icon}" alt="${detail.info.name}" class="provider-icon">
+				<div class="provider-info">
+					<div class="provider-name">${detail.info.name}</div>
+					<div class="provider-rdns">${detail.info.rdns}</div>
+				</div>
+			`
+        providerList.appendChild(item)
+
+        if (!selectedProvider) {
+          selectedProvider = detail.provider
+          log('Selected provider: ' + detail.info.name)
+        }
+      })
+
+      window.dispatchEvent(new Event('eip6963:requestProvider'))
+      log('Dispatched eip6963:requestProvider event')
+
+      setTimeout(() => {
+        if (window.ethereum) {
+          document.getElementById('ethereum-detected').textContent = 'Yes ✓'
+          document.getElementById('ethereum-status').className =
+            'status-icon success'
+          log('window.ethereum detected', 'success')
+
+          if (!selectedProvider) {
+            selectedProvider = window.ethereum
+            log('Using window.ethereum as provider')
+          }
+
+          window.ethereum.on('accountsChanged', (accounts) => {
+            log(`accountsChanged event: ${JSON.stringify(accounts)}`, 'info')
+            displayAccounts(accounts)
+          })
+
+          window.ethereum.on('chainChanged', (chainId) => {
+            log(`chainChanged event: ${chainId}`, 'info')
+            displayChainId(chainId)
+          })
+        } else {
+          document.getElementById('ethereum-detected').textContent = 'No ✗'
+          document.getElementById('ethereum-status').className =
+            'status-icon error'
+          log('window.ethereum not found', 'error')
+        }
+
+        if (detectedProviders.length === 0) {
+          document.getElementById('eip6963-status').className =
+            'status-icon error'
+          log('No EIP-6963 providers found', 'error')
+        }
+      }, 1000)
+
+      async function connectWallet() {
+        try {
+          if (!selectedProvider) {
+            throw new Error('No provider available')
+          }
+
+          log('Requesting accounts...')
+          const accounts = await selectedProvider.request({
+            method: 'eth_requestAccounts',
+          })
+
+          log(`Connected! Accounts: ${JSON.stringify(accounts)}`, 'success')
+          displayAccounts(accounts)
+
+          document.getElementById('get-accounts-btn').disabled = false
+
+          const chainId = await selectedProvider.request({
+            method: 'eth_chainId',
+          })
+          displayChainId(chainId)
+        } catch (error) {
+          log(`Error: ${error.message}`, 'error')
+        }
+      }
+
+      async function getAccounts() {
+        try {
+          if (!selectedProvider) {
+            throw new Error('No provider available')
+          }
+
+          log('Getting accounts...')
+          const accounts = await selectedProvider.request({
+            method: 'eth_accounts',
+          })
+
+          log(`Accounts: ${JSON.stringify(accounts)}`, 'success')
+          displayAccounts(accounts)
+        } catch (error) {
+          log(`Error: ${error.message}`, 'error')
+        }
+      }
+
+      function displayAccounts(accounts) {
+        const accountInfo = document.getElementById('account-info')
+        if (accounts.length === 0) {
+          accountInfo.innerHTML =
+            '<div class="info-box" style="color: #ef4444;">No accounts connected</div>'
+        } else {
+          accountInfo.innerHTML = `
+					<div class="info-box">
+						<div class="info-label">Connected Address:</div>
+						${accounts[0]}
+					</div>
+				`
+        }
+      }
+
+      async function getChainId() {
+        try {
+          if (!selectedProvider) {
+            throw new Error('No provider available')
+          }
+
+          log('Getting chain ID...')
+          const chainId = await selectedProvider.request({
+            method: 'eth_chainId',
+          })
+
+          log(`Chain ID: ${chainId}`, 'success')
+          displayChainId(chainId)
+        } catch (error) {
+          log(`Error: ${error.message}`, 'error')
+        }
+      }
+
+      function displayChainId(chainId) {
+        const networkInfo = document.getElementById('network-info')
+        const chainIdDecimal = parseInt(chainId, 16)
+        const networkNames = {
+          1: 'Ethereum Mainnet',
+          11155111: 'Sepolia Testnet',
+          8453: 'Base',
+          42161: 'Arbitrum One',
+        }
+        const networkName = networkNames[chainIdDecimal] || 'Unknown'
+
+        networkInfo.innerHTML = `
+				<div class="info-box">
+					<div class="info-label">Chain ID:</div>
+					${chainId} (${chainIdDecimal} - ${networkName})
+				</div>
+			`
+      }
+
+      async function switchToSepolia() {
+        try {
+          if (!selectedProvider) {
+            throw new Error('No provider available')
+          }
+
+          log('Switching to Sepolia...')
+          await selectedProvider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0xaa36a7' }],
+          })
+
+          log('Switched to Sepolia!', 'success')
+        } catch (error) {
+          log(`Error: ${error.message}`, 'error')
+        }
+      }
+
+      async function switchToMainnet() {
+        try {
+          if (!selectedProvider) {
+            throw new Error('No provider available')
+          }
+
+          log('Switching to Mainnet...')
+          await selectedProvider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x1' }],
+          })
+
+          log('Switched to Mainnet!', 'success')
+        } catch (error) {
+          log(`Error: ${error.message}`, 'error')
+        }
+      }
+    </script>
+  </body>
+</html>
