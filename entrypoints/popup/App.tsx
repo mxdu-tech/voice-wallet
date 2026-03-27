@@ -21,6 +21,8 @@ function App() {
 	const [isLoadingBalance, setIsLoadingBalance] = useState(false)
 	const [walletExists, setWalletExists] = useState<boolean | null>(null)
 	const [unlockError, setUnlockError] = useState('')
+	const [voiceInput, setVoiceInput] = useState('')
+	const [parsedIntent, setParsedIntent] = useState<string>('')
 
 	useEffect(() => {
 		const init = async () => {
@@ -226,14 +228,61 @@ function App() {
 		}
 	}
 
+	const handleParseVoiceInput = () => {
+		if (!voiceInput.trim()){
+			setParsedIntent('Please enter a command.')
+			return
+		}
+
+		const input = voiceInput.toLowerCase()
+
+		if (input.includes('send')){
+			setParsedIntent(`Detected action: send\nRaw input: ${voiceInput}`)
+			return
+		}
+
+		if (input.includes('balance')){
+			setParsedIntent(`Detected action: check balance\nRaw input: ${voiceInput}`)
+			return
+		}
+
+		setParsedIntent(`Could not parse command.\nRaw input: ${voiceInput}`)
+	}
+
 	return (
 		<div className="w-96 bg-background text-foreground">
 			<div className="p-6 space-y-4">
 				<div className="text-center mb-6">
-					<h1 className="text-2xl font-bold">WDK Wallet</h1>
+					<h1 className="text-2xl font-bold">Voice Wallet</h1>
 					<p className="text-sm text-muted-foreground">
-						Browser Extension Demo
+						Natural-language crypto assistant
 					</p>
+				</div>
+
+				<div className="space-y-3 rounded-xl border p-4">
+					<div>
+						<h2 className="text-sm font-semibold">Voice Command</h2>
+						<p className="text-xs text-muted-foreground">
+							Try: send 0.01 ETH to alice
+						</p>
+					</div>
+
+					<textarea
+						value={voiceInput}
+						onChange={(e) => setVoiceInput(e.target.value)}
+						placeholder="Type your command here..."
+						className="w-full min-h-[96px] rounded-md border bg-background px-3 py-2 text-sm"
+					/>
+
+					<Button onClick={handleParseVoiceInput} className="w-full">
+						Parse Command
+					</Button>
+
+					{parsedIntent && (
+						<div className="rounded-md bg-muted p-3 text-sm whitespace-pre-wrap">
+							{parsedIntent}
+						</div>
+					)}
 				</div>
 
 				{walletExists === null ? (
