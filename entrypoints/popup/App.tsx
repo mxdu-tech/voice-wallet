@@ -22,7 +22,15 @@ function App() {
 	const [walletExists, setWalletExists] = useState<boolean | null>(null)
 	const [unlockError, setUnlockError] = useState('')
 	const [voiceInput, setVoiceInput] = useState('')
-	const [parsedIntent, setParsedIntent] = useState<string>('')
+
+	type Intent = {
+		action: 'send' | 'balance' | 'unknown'
+		amount?: string
+		token?: string
+		to?: string
+		raw: string
+	}
+	const [parsedIntent, setParsedIntent] = useState<Intent | null>(null)
 
 	useEffect(() => {
 		const init = async () => {
@@ -230,23 +238,72 @@ function App() {
 
 	const handleParseVoiceInput = () => {
 		if (!voiceInput.trim()){
-			setParsedIntent('Please enter a command.')
+			const intentObject = {
+				action: 'unknown' as const,
+				raw: voiceInput
+			}
+			setParsedIntent(intentObject)
+
+			chrome.runtime.sendMessage({
+				type: 'VOICE_INTENT',
+				payload: intentObject,
+			})
 			return
 		}
 
 		const input = voiceInput.toLowerCase()
 
-		if (input.includes('send')){
-			setParsedIntent(`Detected action: send\nRaw input: ${voiceInput}`)
+		// 简单解析：send 0.01 ETH to alice
+		const sendMatch = input.match(/send\s+([\d.]+)\s+(\w+)\s+to\s+(\w+)/)
+
+		if (sendMatch) {
+			const [, amount, token, to] = sendMatch
+	
+			const intentObject = {
+				action: 'send' as const,
+				amount,
+				token,
+				to,
+				raw: voiceInput,
+			}
+	
+			setParsedIntent(intentObject)
+	
+			chrome.runtime.sendMessage({
+				type: 'VOICE_INTENT',
+				payload: intentObject,
+			})
+	
 			return
 		}
-
-		if (input.includes('balance')){
-			setParsedIntent(`Detected action: check balance\nRaw input: ${voiceInput}`)
+	
+		if (input.includes('balance')) {
+			const intentObject = {
+				action: 'balance' as const,
+				raw: voiceInput,
+			}
+	
+			setParsedIntent(intentObject)
+	
+			chrome.runtime.sendMessage({
+				type: 'VOICE_INTENT',
+				payload: intentObject,
+			})
+	
 			return
 		}
-
-		setParsedIntent(`Could not parse command.\nRaw input: ${voiceInput}`)
+	
+		const intentObject = {
+			action: 'unknown' as const,
+			raw: voiceInput,
+		}
+	
+		setParsedIntent(intentObject)
+	
+		chrome.runtime.sendMessage({
+			type: 'VOICE_INTENT',
+			payload: intentObject,
+		})
 	}
 
 	return (
@@ -255,7 +312,7 @@ function App() {
 				<div className="text-center mb-6">
 					<h1 className="text-2xl font-bold">Voice Wallet</h1>
 					<p className="text-sm text-muted-foreground">
-						Natural-language crypto assistant
+						Speak to pay
 					</p>
 				</div>
 
@@ -280,7 +337,14 @@ function App() {
 
 					{parsedIntent && (
 						<div className="rounded-md bg-muted p-3 text-sm whitespace-pre-wrap">
-							{parsedIntent}
+							{parsedIntent && (
+								<div className="rounded-md bg-muted p-3 text-sm space-y-1">
+									<div>Action: {parsedIntent.action}</div>
+									{parsedIntent.amount && <div>Amount: {parsedIntent.amount}</div>}
+									{parsedIntent.token && <div>Token: {parsedIntent.token}</div>}
+									{parsedIntent.to && <div>To: {parsedIntent.to}</div>}
+								</div>
+							)}
 						</div>
 					)}
 				</div>

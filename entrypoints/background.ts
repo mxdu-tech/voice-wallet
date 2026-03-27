@@ -48,6 +48,7 @@ export default defineBackground(async () => {
 		throw error
 	}
 
+
 	chrome.runtime.onMessage.addListener(
 		(
 			message: Message | any,
@@ -60,6 +61,13 @@ export default defineBackground(async () => {
 
 			if ((message as any).type === 'ping') {
 				sendResponse({ pong: true })
+				return true
+			}
+
+			if ((message as any).type == 'VOICE_INTENT'){
+				console.log('=== VOICE_INTENT RECEIVED ===', message.payload)
+
+				sendResponse({sucess: true})
 				return true
 			}
 
