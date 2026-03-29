@@ -5,6 +5,8 @@ import { CreateWalletForm } from './components/CreateWalletForm'
 import { type Network, NetworkSelector } from './components/NetworkSelector'
 import { UnlockWalletForm } from './components/UnlockWalletForm'
 import { WalletView } from './components/WalletView'
+import type { Intent } from '@/lib/types/intent'
+import { parseIntentWithAI } from '@/lib/ai/parseIntent'
 
 const NETWORKS: Network[] = [
 	{ chainId: 1, name: 'Ethereum Mainnet', symbol: 'ETH' },
@@ -23,14 +25,8 @@ function App() {
 	const [unlockError, setUnlockError] = useState('')
 	const [voiceInput, setVoiceInput] = useState('')
 
-	type Intent = {
-		action: 'send' | 'balance' | 'unknown'
-		amount?: string
-		token?: string
-		to?: string
-		raw: string
-	}
 	const [parsedIntent, setParsedIntent] = useState<Intent | null>(null)
+	const [isParsing, setIsParsing] = useState(false)
 
 	useEffect(() => {
 		const init = async () => {
@@ -236,74 +232,29 @@ function App() {
 		}
 	}
 
-	const handleParseVoiceInput = () => {
-		if (!voiceInput.trim()){
-			const intentObject = {
-				action: 'unknown' as const,
-				raw: voiceInput
-			}
+	const handleParseVoiceInput = async () => {
+		setIsParsing(true)
+		try {
+			const intentObject = await parseIntentWithAI(voiceInput)
+	
 			setParsedIntent(intentObject)
-
+	
 			chrome.runtime.sendMessage({
 				type: 'VOICE_INTENT',
 				payload: intentObject,
 			})
-			return
-		}
-
-		const input = voiceInput.toLowerCase()
-
-		// 简单解析：send 0.01 ETH to alice
-		const sendMatch = input.match(/send\s+([\d.]+)\s+(\w+)\s+to\s+(\w+)/)
-
-		if (sendMatch) {
-			const [, amount, token, to] = sendMatch
+		} catch (error) {
+			console.error('AI parsing failed:', error)
 	
-			const intentObject = {
-				action: 'send' as const,
-				amount,
-				token,
-				to,
+			const fallbackIntent: Intent = {
+				action: 'unknown',
 				raw: voiceInput,
 			}
 	
-			setParsedIntent(intentObject)
-	
-			chrome.runtime.sendMessage({
-				type: 'VOICE_INTENT',
-				payload: intentObject,
-			})
-	
-			return
+			setParsedIntent(fallbackIntent)
+		} finally {
+			setIsParsing(false)
 		}
-	
-		if (input.includes('balance')) {
-			const intentObject = {
-				action: 'balance' as const,
-				raw: voiceInput,
-			}
-	
-			setParsedIntent(intentObject)
-	
-			chrome.runtime.sendMessage({
-				type: 'VOICE_INTENT',
-				payload: intentObject,
-			})
-	
-			return
-		}
-	
-		const intentObject = {
-			action: 'unknown' as const,
-			raw: voiceInput,
-		}
-	
-		setParsedIntent(intentObject)
-	
-		chrome.runtime.sendMessage({
-			type: 'VOICE_INTENT',
-			payload: intentObject,
-		})
 	}
 
 	return (
@@ -331,8 +282,8 @@ function App() {
 						className="w-full min-h-[96px] rounded-md border bg-background px-3 py-2 text-sm"
 					/>
 
-					<Button onClick={handleParseVoiceInput} className="w-full">
-						Parse Command
+					<Button onClick={handleParseVoiceInput} className="w-full" disabled={isParsing}>
+						{isParsing ? 'Parsing...' : 'Parse Command'}
 					</Button>
 
 					{parsedIntent && (
