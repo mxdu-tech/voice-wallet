@@ -27,6 +27,7 @@ function App() {
 
 	const [parsedIntent, setParsedIntent] = useState<Intent | null>(null)
 	const [isParsing, setIsParsing] = useState(false)
+	const [executionResult, setExecutionResult] = useState<string>('')
 
 	useEffect(() => {
 		const init = async () => {
@@ -235,14 +236,24 @@ function App() {
 	const handleParseVoiceInput = async () => {
 		setIsParsing(true)
 		try {
-			const intentObject = await parseIntentWithAI(voiceInput)
+			const normalizedInput = voiceInput.replace(/\s+/g, ' ').trim()
+			const intentObject = await parseIntentWithAI(normalizedInput)
 	
 			setParsedIntent(intentObject)
 	
-			chrome.runtime.sendMessage({
+			const response = await chrome.runtime.sendMessage({
 				type: 'VOICE_INTENT',
 				payload: intentObject,
 			})
+
+			console.log('VOICE_INTENT response:', response)
+
+			if (response?.success){
+				setExecutionResult(response.message || 'Transaction sent')
+			}
+			else{
+				setExecutionResult(response?.error || 'Execution failed')
+			}
 		} catch (error) {
 			console.error('AI parsing failed:', error)
 	
@@ -271,7 +282,7 @@ function App() {
 					<div>
 						<h2 className="text-sm font-semibold">Voice Command</h2>
 						<p className="text-xs text-muted-foreground">
-							Try: send 0.01 ETH to alice
+							Try: send 0.0001 ETH to 0x8ed7af7d0B09B693a81f38947B9Df15c2f008296
 						</p>
 					</div>
 
@@ -296,6 +307,11 @@ function App() {
 									{parsedIntent.to && <div>To: {parsedIntent.to}</div>}
 								</div>
 							)}
+						</div>
+					)}
+					{executionResult && (
+						<div className="rounded-md border p-3 text-sm">
+							{executionResult}
 						</div>
 					)}
 				</div>

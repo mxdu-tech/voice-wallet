@@ -1,6 +1,9 @@
 import type { Message } from '@/lib'
 import { MessageHandler, WalletSession } from '@/lib'
 
+
+import { parseEther } from 'viem'
+
 class ExpectedUserError extends Error {
 	constructor(message: string) {
 		super(message)
@@ -8,7 +11,7 @@ class ExpectedUserError extends Error {
 	}
 }
 
-export default defineBackground(async () => {
+export default defineBackground(() => {
 	console.log('=== BACKGROUND SCRIPT STARTING ===')
 
 	let session: WalletSession
@@ -16,6 +19,85 @@ export default defineBackground(async () => {
 
 	const AUTO_LOCK_ALARM = 'wallet-auto-lock'
 	const AUTO_LOCK_MINUTES = 15
+
+	
+
+	async function handleVoiceIntent(intent: any) {
+		if (!intent || intent.action != 'send'){
+			return {
+				success: false,
+				error: 'Only send action is supported for now',
+			}
+		}
+
+		const { amount, token, to} = intent
+		if (!amount || !to){
+			return {
+				success: false,
+				error: 'Missing amount or recipient',
+			}
+		}
+		if (token && token.toUpperCase() !== 'ETH'){
+			return {
+				success: false,
+				error: 'Only native ETH transfers are supported for now',
+			}
+		}
+
+		const wallet = session.get()
+
+		if (!wallet) {
+			return { success: false, error: 'Wallet is locked' }
+		}
+
+		if (!wallet) {
+			return {
+				success: false,
+				error: 'Wallet is locked or not created',
+			}
+		}
+
+		const account = await wallet.getAccount(0)
+
+		console.log('ACCOUNT OBJECT:', account)
+		console.log('ACCOUNT KEYS:', Object.keys(account))
+
+		if (Number.isNaN(Number(amount)) || Number(amount) <= 0){
+			return {
+				success: false,
+				error: 'Amount must be a positive number',
+			}
+		}
+
+
+		if (!/^0x[a-fA-F0-9]{40}$/.test(to)){
+			return {
+				success: false,
+				error: 'Recipient must be a vaild 0x address for now',
+			}
+		}
+
+		const tx = {
+			to,
+			value: parseEther(amount),
+		}
+
+		console.log('--- PREPARIING SEND TX ===', tx)
+
+		const result = await account.sendTransaction(tx)
+
+		console.log('=== TX SENT ===', result)
+
+		return {
+			success: true,
+			message: `Transaction sent: ${result.hash}`,
+			data: {
+				hash: result.hash,
+				fee: result.fee? result.fee.toString() : undefined,
+			},
+		}
+
+	}
 
 	async function resetAutoLockAlarm() {
 		await chrome.alarms.clear(AUTO_LOCK_ALARM)
@@ -34,20 +116,22 @@ export default defineBackground(async () => {
 		}
 	})
 
-	try {
-		session = new WalletSession()
-		messageHandler = new MessageHandler(session)
-
-		const restored = await session.restore()
-		if (restored) {
-			console.log('=== SESSION RESTORED ===')
-			await resetAutoLockAlarm()
+	async function init(){
+		try {
+	
+			const restored = await session.restore()
+			if (restored) {
+				console.log('=== SESSION RESTORED ===')
+				await resetAutoLockAlarm()
+			}
+		} catch (error) {
+			console.error('=== FATAL: Failed to initialize ===', error)
+			throw error
 		}
-	} catch (error) {
-		console.error('=== FATAL: Failed to initialize ===', error)
-		throw error
 	}
 
+	session = new WalletSession()
+	messageHandler = new MessageHandler(session)
 
 	chrome.runtime.onMessage.addListener(
 		(
@@ -67,7 +151,16 @@ export default defineBackground(async () => {
 			if ((message as any).type == 'VOICE_INTENT'){
 				console.log('=== VOICE_INTENT RECEIVED ===', message.payload)
 
-				sendResponse({sucess: true})
+				handleVoiceIntent(message.payload)
+				.then((result) => {
+					sendResponse(result)
+				})
+				.catch((error) => {
+					sendResponse({
+						success: false,
+						error: error instanceof Error ? error.message : 'Unknown error',
+					})
+				})
 				return true
 			}
 
@@ -154,6 +247,8 @@ export default defineBackground(async () => {
 			return true
 		},
 	)
+
+	init()
 
 	async function handleProviderRequest(
 		method: string,

@@ -1,4 +1,5 @@
 import type { WalletSession } from '../session/wallet-session'
+import { formatEther } from 'viem'
 import type {
 	CheckWalletExistsMessage,
 	CreateWalletMessage,
@@ -193,7 +194,7 @@ export class MessageHandler {
 			const balance = await account.getBalance()
 			return {
 				success: true,
-				data: balance.toString(),
+				data: formatEther(balance),
 			}
 		} catch (error) {
 			return {

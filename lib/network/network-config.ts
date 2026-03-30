@@ -1,7 +1,8 @@
 export interface Network {
 	chainId: number
 	name: string
-	rpcUrl: string
+	rpcUrl?: string
+	rpcUrls?: string[]
 }
 
 const NETWORKS: Record<number, Network> = {
@@ -13,7 +14,11 @@ const NETWORKS: Record<number, Network> = {
 	11155111: {
 		chainId: 11155111,
 		name: 'Sepolia',
-		rpcUrl: 'https://sepolia.drpc.org',
+		rpcUrls: [
+			'https://sepolia.drpc.org',
+			'https://ethereum-sepolia-rpc.publicnode.com',
+			'https://rpc.sepolia.org',
+		]
 	},
 	8453: {
 		chainId: 8453,
@@ -27,7 +32,7 @@ const NETWORKS: Record<number, Network> = {
 	},
 }
 
-let currentNetworkChainId = 1
+let currentNetworkChainId = 11155111
 
 export function getCurrentNetwork(): Network {
 	const network = NETWORKS[currentNetworkChainId]
@@ -47,4 +52,14 @@ export function switchNetwork(chainId: number): void {
 
 export function getNetworkByChainId(chainId: number): Network | undefined {
 	return NETWORKS[chainId]
+}
+
+export function getRpcUrl(network: Network): string {
+	if (network.rpcUrls && network.rpcUrls.length > 0) {
+		return network.rpcUrls[0] // 先用第一个
+	}
+	if (network.rpcUrl) {
+		return network.rpcUrl
+	}
+	throw new Error('No RPC URL configured')
 }

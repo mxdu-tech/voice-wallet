@@ -5,6 +5,7 @@ import {
   getCurrentNetwork,
   getNetworkByChainId,
   switchNetwork,
+  getRpcUrl
 } from '../network/network-config'
 import { VaultStorage } from '../storage/vault-storage'
 import { SessionStorage } from './session-storage'
@@ -22,7 +23,7 @@ export class WalletSession {
     this.mnemonic = mnemonic
     const network = getCurrentNetwork()
     this.wallet = new WalletManagerEvm(mnemonic, {
-      provider: network.rpcUrl,
+      provider: getRpcUrl(network),
     })
 
     return true
@@ -40,7 +41,7 @@ export class WalletSession {
     this.mnemonic = mnemonic
     const network = getCurrentNetwork()
     this.wallet = new WalletManagerEvm(mnemonic, {
-      provider: network.rpcUrl,
+      provider: getRpcUrl(network),
     })
 
     await SessionStorage.save(mnemonic)
@@ -59,7 +60,7 @@ export class WalletSession {
     this.mnemonic = mnemonic
     const network = getCurrentNetwork()
     this.wallet = new WalletManagerEvm(mnemonic, {
-      provider: network.rpcUrl,
+      provider: getRpcUrl(network),
     })
 
     await SessionStorage.save(mnemonic)
@@ -106,7 +107,7 @@ export class WalletSession {
 
     this.wallet.dispose()
     this.wallet = new WalletManagerEvm(this.mnemonic, {
-      provider: network.rpcUrl,
+      provider: getRpcUrl(network),
     })
 
     await SessionStorage.updateActivity()
