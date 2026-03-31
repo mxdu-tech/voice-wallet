@@ -11,6 +11,8 @@ import type {
 	MessageResponse,
 	SwitchChainMessage,
 	UnlockWalletMessage,
+	ImportWalletMessage,
+	RevealMnemonicMessage
 } from './types'
 
 const SUPPORTED_CHAINS = new Map<number, string>([
@@ -21,7 +23,7 @@ const SUPPORTED_CHAINS = new Map<number, string>([
 ])
 
 export class MessageHandler {
-	private currentChainId: number = 1
+	private currentChainId: number = 11155111
 	private session: WalletSession
 
 	constructor(session: WalletSession) {
@@ -35,8 +37,12 @@ export class MessageHandler {
 			switch (message.type) {
 				case 'createWallet':
 					return await this.handleCreateWallet(message as CreateWalletMessage)
+				case 'importWallet':
+					return await this.handleImportWallet(message as ImportWalletMessage)
 				case 'unlockWallet':
 					return await this.handleUnlockWallet(message as UnlockWalletMessage)
+				case 'revealMnemonic':
+					return await this.handleRevealMnemonic(message as RevealMnemonicMessage)
 				case 'lockWallet':
 					return await this.handleLockWallet(message as LockWalletMessage)
 				case 'checkWalletExists':
@@ -86,6 +92,29 @@ export class MessageHandler {
 				success: false,
 				error:
 					error instanceof Error ? error.message : 'Failed to create wallet',
+			}
+		}
+	}
+
+	private async handleImportWallet(
+		message: ImportWalletMessage,
+	): Promise<MessageResponse<string>> {
+		try {
+			console.log('handleImportWallet: Importing wallet...')
+			const wallet = await this.session.import(message.mnemonic, message.password)
+			const account = await wallet.getAccount(0)
+			const address = await account.getAddress()
+			console.log('handleImportWallet: Wallet imported, address:', address)
+			return {
+				success: true,
+				data: address,
+			}
+		} catch (error) {
+			console.error('handleImportWallet: Error:', error)
+			return {
+				success: false,
+				error:
+					error instanceof Error ? error.message : 'Failed to import wallet',
 			}
 		}
 	}
@@ -179,9 +208,10 @@ export class MessageHandler {
 	}
 
 	private async handleGetBalance(
-		_message: GetBalanceMessage,
+		message: GetBalanceMessage,
 	): Promise<MessageResponse<string>> {
 		try {
+			console.log('[MessageHandler] currentChainId:', this.currentChainId)
 			const wallet = this.session.get()
 			if (!wallet) {
 				return {
@@ -204,6 +234,25 @@ export class MessageHandler {
 		}
 	}
 
+	private async handleRevealMnemonic(
+		message: RevealMnemonicMessage,
+	  ): Promise<MessageResponse<string>> {
+		try {
+		  const mnemonic = await this.session.revealMnemonic(message.password)
+	  
+		  return {
+			success: true,
+			data: mnemonic,
+		  }
+		} catch (error) {
+		  return {
+			success: false,
+			error:
+			  error instanceof Error ? error.message : 'Failed to reveal mnemonic',
+		  }
+		}
+	  }
+
 	private async handleGetChainId(
 		_message: GetChainIdMessage,
 	): Promise<MessageResponse<number>> {
@@ -216,6 +265,7 @@ export class MessageHandler {
 	private async handleSwitchChain(
 		message: SwitchChainMessage,
 	): Promise<MessageResponse<number>> {
+		console.log('[MessageHandler] currentChainId:', this.currentChainId)
 		try {
 			// SECURITY: Require unlocked wallet before allowing network switch
 			if (!this.session.isUnlocked()) {

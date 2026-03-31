@@ -1,5 +1,15 @@
 // Message types for chrome.runtime.sendMessage communication
 
+export type TxRecord = {
+	hash: string
+	amount: string
+	to: string
+	chainId: number
+	networkName: string
+	status: 'sent' | 'failed'
+	timestamp: number
+}
+
 export type MessageType =
 	| 'createWallet'
 	| 'unlockWallet'
@@ -9,9 +19,22 @@ export type MessageType =
 	| 'getBalance'
 	| 'getChainId'
 	| 'switchChain'
+	| 'importWallet'
+	| 'revealMnemonic'
 
 export interface CreateWalletMessage {
 	type: 'createWallet'
+	password: string
+}
+
+export interface revealMnemonicMessage {
+	type: 'revealMnemonic'
+	password: string
+}
+
+export interface ImportWalletMessage {
+	type: 'importWallet'
+	mnemonic: string
 	password: string
 }
 
@@ -54,6 +77,8 @@ export type Message =
 	| GetBalanceMessage
 	| GetChainIdMessage
 	| SwitchChainMessage
+	| ImportWalletMessage
+	| revealMnemonicMessage
 
 export interface MessageResponse<T = unknown> {
 	success: boolean

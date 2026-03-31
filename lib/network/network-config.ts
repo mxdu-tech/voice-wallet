@@ -1,36 +1,47 @@
 export interface Network {
 	chainId: number
 	name: string
-	rpcUrl?: string
-	rpcUrls?: string[]
+	rpcUrls: string[]
 }
 
 const NETWORKS: Record<number, Network> = {
 	1: {
-		chainId: 1,
-		name: 'Mainnet',
-		rpcUrl: 'https://eth.llamarpc.com',
+	  chainId: 1,
+	  name: 'Mainnet',
+	  rpcUrls: [
+		'https://eth.llamarpc.com',
+		'https://ethereum.publicnode.com',
+	  ],
 	},
+  
 	11155111: {
-		chainId: 11155111,
-		name: 'Sepolia',
-		rpcUrls: [
-			'https://sepolia.drpc.org',
-			'https://ethereum-sepolia-rpc.publicnode.com',
-			'https://rpc.sepolia.org',
-		]
+	  chainId: 11155111,
+	  name: 'Sepolia',
+	  rpcUrls: [
+		'https://sepolia.drpc.org',
+		'https://ethereum-sepolia-rpc.publicnode.com',
+		'https://rpc.sepolia.org',
+	  ],
 	},
+  
 	8453: {
-		chainId: 8453,
-		name: 'Base',
-		rpcUrl: 'https://base.drpc.org',
+	  chainId: 8453,
+	  name: 'Base',
+	  rpcUrls: [
+		'https://base.drpc.org',
+		'https://base.publicnode.com',
+	  ],
 	},
+  
 	42161: {
-		chainId: 42161,
-		name: 'Arbitrum',
-		rpcUrl: 'https://arbitrum.drpc.org',
+	  chainId: 42161,
+	  name: 'Arbitrum',
+	  rpcUrls: [
+		'https://arbitrum.drpc.org',
+		'https://arbitrum.publicnode.com',
+	  ],
 	},
-}
+  }
 
 let currentNetworkChainId = 11155111
 
@@ -54,12 +65,3 @@ export function getNetworkByChainId(chainId: number): Network | undefined {
 	return NETWORKS[chainId]
 }
 
-export function getRpcUrl(network: Network): string {
-	if (network.rpcUrls && network.rpcUrls.length > 0) {
-		return network.rpcUrls[0] // 先用第一个
-	}
-	if (network.rpcUrl) {
-		return network.rpcUrl
-	}
-	throw new Error('No RPC URL configured')
-}
