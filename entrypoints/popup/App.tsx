@@ -34,6 +34,8 @@ function App() {
 	const [isParsing, setIsParsing] = useState(false)
 	const [showAllHistory, setShowAllHistory] = useState(false)
 
+	const [pendingIntent, setPendingIntent] = useState<Intent | null>(null)
+
 	type TxResult = {
 		status: 'sent' | 'failed'
 		hash?: string
@@ -53,7 +55,8 @@ function App() {
 	const [revealError, setRevealError] = useState('')
 
 	const [copied, setCopied] = useState(false)
-	const [txHistory, setTxhistory] = useState<TxRecord[]>([])
+	const [txHistory, setTxHistory] = useState<TxRecord[]>([])
+	const [copiedHash, setCopiedHash] = useState<string | null>(null)
 
 	const visibleHistory = showAllHistory ? txHistory : txHistory.slice(0, 1)
 
@@ -63,7 +66,7 @@ function App() {
 		const loadHistory = async () => {
 			try {
 				const records = await TransactionStorage.list()
-				setTxhistory(records)
+				setTxHistory(records)
 			} catch (error) {
 				console.error('Failed to load tx history:', error)
 			}
@@ -366,6 +369,61 @@ function App() {
 		return `${hash.slice(0, 6)}...${hash.slice(-4)}`
 	}
 
+	const handleConfirmIntent = async () => {
+		if (!pendingIntent) return
+	
+		setTxResult(null)
+		try {
+			const response = await chrome.runtime.sendMessage({
+				type: 'VOICE_INTENT',
+				payload: pendingIntent,
+			})
+	
+			const networkName =
+				NETWORKS.find((n) => n.chainId === currentChainId)?.name || 'Unknown Network'
+	
+			if (response?.success) {
+				setTxResult({
+					status: 'sent',
+					hash: response?.data?.hash,
+					amount: pendingIntent.amount,
+					to: pendingIntent.to,
+					networkName,
+				})
+	
+				if (response?.data?.hash && pendingIntent.amount && pendingIntent.to) {
+					await TransactionStorage.add({
+						hash: response.data.hash,
+						amount: pendingIntent.amount,
+						to: pendingIntent.to,
+						chainId: currentChainId,
+						networkName,
+						status: 'sent',
+						timestamp: Date.now(),
+					})
+					const records = await TransactionStorage.list()
+					setTxHistory(records)
+				}
+			} else {
+				setTxResult({
+					status: 'failed',
+					error: response?.error || 'Execution failed',
+				})
+			}
+		} catch (error) {
+			setTxResult({
+				status: 'failed',
+				error: 'Execution failed. Please try again.',
+			})
+		} finally {
+			setPendingIntent(null)
+		}
+	}
+
+	const handleCancelIntent = () => {
+		setPendingIntent(null)
+	}
+
 	const handleParseVoiceInput = async () => {
 		setTxResult(null)
 		setIsParsing(true)
@@ -374,7 +432,7 @@ function App() {
 			const intentObject = await parseIntentWithAI(normalizedInput)
 	
 			setParsedIntent(intentObject)
-
+			
 			if (intentObject.action == 'unknown'){
 				setTxResult({
 					status: 'failed',
@@ -382,6 +440,8 @@ function App() {
 				})
 				return
 			}
+
+			setPendingIntent(intentObject)
 	
 			const response = await chrome.runtime.sendMessage({
 				type: 'VOICE_INTENT',
@@ -413,7 +473,7 @@ function App() {
 				timestamp: Date.now(),
 				})
 				const records = await TransactionStorage.list()
-				setTxhistory(records)
+				setTxHistory(records)
 			}
 			}
 			else{
@@ -485,6 +545,30 @@ function App() {
 							)}
 						</div>
 					)}
+					{pendingIntent && pendingIntent.action === 'send' && (
+						<div className="rounded-md border p-4 space-y-2 text-sm">
+							<div className="font-semibold">Confirm Transaction</div>
+							{pendingIntent.amount && <div>Amount: {pendingIntent.amount} ETH</div>}
+							{pendingIntent.to && (
+								<div>
+									<div>To:</div>
+									<div className="break-all">{pendingIntent.to}</div>
+								</div>
+							)}
+							<div>
+								Network: {NETWORKS.find((n) => n.chainId === currentChainId)?.name}
+							</div>
+
+							<div className="grid grid-cols-2 gap-2">
+								<Button type="button" variant="outline" onClick={handleCancelIntent}>
+									Cancel
+								</Button>
+								<Button type="button" onClick={handleConfirmIntent}>
+									Confirm
+								</Button>
+							</div>
+						</div>
+					)}
 					{txResult && (
 						<div className="rounded-md border p-4 space-y-2 text-sm">
 							<div className="font-semibold">
@@ -499,9 +583,18 @@ function App() {
 								{txResult.hash && (
 									<div
 										className="break-all cursor-pointer hover:opacity-80"
-										onClick={() => navigator.clipboard.writeText(txResult.hash!)}
+										onClick={async () => {
+											try {
+												await navigator.clipboard.writeText(txResult.hash!)
+												setCopiedHash(txResult.hash!)
+												setTimeout(() => setCopiedHash(null), 1200)
+											} catch (error) {
+												console.error('Failed to copy hash:', error)
+											}
+										}}
 									>
-										Hash: {shortenHash(txResult.hash!)}
+										Hash: {shortenHash(txResult.hash!)}{' '}
+										{copiedHash === txResult.hash ? '(copied)' : ''}
 									</div>
 								)}
 
