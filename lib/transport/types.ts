@@ -27,7 +27,7 @@ export interface CreateWalletMessage {
 	password: string
 }
 
-export interface revealMnemonicMessage {
+export interface RevealMnemonicMessage {
 	type: 'revealMnemonic'
 	password: string
 }
@@ -78,7 +78,7 @@ export type Message =
 	| GetChainIdMessage
 	| SwitchChainMessage
 	| ImportWalletMessage
-	| revealMnemonicMessage
+	| RevealMnemonicMessage
 
 export interface MessageResponse<T = unknown> {
 	success: boolean

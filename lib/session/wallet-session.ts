@@ -23,26 +23,15 @@ export class WalletSession {
         console.log(`[WalletSession] Using RPC: ${rpcUrl}`)
         return rpcUrl
       } catch (error){
-        console.warn(`[WalletSession] RPC unavailable: ${rpcUrl}`, error)
+        console.warn(`[WalletSession] RPC unavailable: ${rpcUrl}`)
       }
     }
     throw new Error(`No working RPC available for ${network.name}`)
   }
 
   async restore(): Promise<boolean> {
-    const mnemonic = await SessionStorage.load()
-    if (!mnemonic) {
-      return false
-    }
-
-    this.mnemonic = mnemonic
-    const network = getCurrentNetwork()
-    const rpcUrl = await this.getWorkingRpcUrl(network)
-    this.wallet = new WalletManagerEvm(mnemonic, {
-      provider: rpcUrl,
-    })
-
-    return true
+    // 不再恢复解锁态
+    return false
   }
 
   async create(password: string): Promise<WalletManagerEvm> {
@@ -54,15 +43,16 @@ export class WalletSession {
     const vault = await VaultCrypto.encrypt(mnemonic, password)
     await VaultStorage.save(vault)
 
-    this.mnemonic = mnemonic
+    
     const network = getCurrentNetwork()
     const rpcUrl = await this.getWorkingRpcUrl(network)
 
-    this.wallet = new WalletManagerEvm(mnemonic, {
-      provider: rpcUrl,
-    })
+    const wallet = new WalletManagerEvm(mnemonic, { provider: rpcUrl })
 
-    await SessionStorage.save(mnemonic)
+    this.mnemonic = mnemonic
+    this.wallet = wallet
+
+    await SessionStorage.start()
 
     return this.wallet
   }
@@ -71,6 +61,9 @@ export class WalletSession {
     const vault = await VaultStorage.load()
     if (!vault) {
       throw new Error('No wallet found')
+    }
+    if (!password) {
+      throw new Error('Password is required')
     }
 
     const mnemonic = await VaultCrypto.decrypt(vault, password)
@@ -92,15 +85,15 @@ export class WalletSession {
     const vault = await VaultCrypto.encrypt(normalizedMnemonic, password)
     await VaultStorage.save(vault)
 
-    this.mnemonic = normalizedMnemonic
+    
     const network = getCurrentNetwork()
     const rpcUrl = await this.getWorkingRpcUrl(network)
-
+    this.mnemonic = normalizedMnemonic
     this.wallet = new WalletManagerEvm(normalizedMnemonic, {
       provider: rpcUrl,
     })
 
-    await SessionStorage.save(normalizedMnemonic)
+    await SessionStorage.start()
 
     return this.wallet
   }
@@ -113,15 +106,14 @@ export class WalletSession {
 
     const mnemonic = await VaultCrypto.decrypt(vault, password)
 
-    this.mnemonic = mnemonic
+    
     const network = getCurrentNetwork()
     const rpcUrl = await this.getWorkingRpcUrl(network)
+    const wallet = new WalletManagerEvm(mnemonic, { provider: rpcUrl })
+    this.mnemonic = mnemonic
+    this.wallet = wallet
 
-    this.wallet = new WalletManagerEvm(mnemonic, {
-      provider: rpcUrl,
-    })
-
-    await SessionStorage.save(mnemonic)
+    await SessionStorage.start()
 
     return this.wallet
   }
@@ -161,15 +153,14 @@ export class WalletSession {
       throw new Error(`Network ${chainId} not found`)
     }
 
-    switchNetwork(chainId)
-
-    this.wallet.dispose()
     const rpcUrl = await this.getWorkingRpcUrl(network)
 
+    this.wallet.dispose()
     this.wallet = new WalletManagerEvm(this.mnemonic, {
       provider: rpcUrl,
     })
 
+    switchNetwork(chainId)
     await SessionStorage.updateActivity()
   }
 }

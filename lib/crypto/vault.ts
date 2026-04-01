@@ -59,6 +59,18 @@ export class VaultCrypto {
 		vault: EncryptedVault,
 		password: string,
 	): Promise<string> {
+		if (vault.version !== 1) {
+			throw new Error('Unsupported vault version')
+		}
+		if (vault.kdf.algorithm !== 'PBKDF2' || vault.kdf.hash !== 'SHA-256') {
+			throw new Error('Unsupported vault parameters')
+		}
+		if (vault.encryption.algorithm !== 'AES-GCM') {
+			throw new Error('Unsupported vault encryption')
+		}
+		if (!password) {
+			throw new Error('Password is required')
+		}
 		try {
 			const salt = VaultCrypto.base64ToArrayBuffer(vault.salt)
 			const key = await VaultCrypto.deriveKey(password, salt)
@@ -83,6 +95,9 @@ export class VaultCrypto {
 		password: string,
 		salt: ArrayBuffer,
 	): Promise<CryptoKey> {
+		if (!password) {
+			throw new Error('Password is required')
+		}
 		const encoder = new TextEncoder()
 		const passwordBuffer = encoder.encode(password)
 

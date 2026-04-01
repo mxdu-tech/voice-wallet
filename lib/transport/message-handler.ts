@@ -31,7 +31,7 @@ export class MessageHandler {
 	}
 
 	async handle(message: Message): Promise<MessageResponse> {
-		console.log('Received message:', message)
+		// console.log('Received message type:', message.type)
 
 		try {
 			switch (message.type) {
@@ -75,13 +75,13 @@ export class MessageHandler {
 		message: CreateWalletMessage,
 	): Promise<MessageResponse<string>> {
 		try {
-			console.log('handleCreateWallet: Starting wallet creation...')
+			// console.log('handleCreateWallet: Starting wallet creation...')
 			const wallet = await this.session.create(message.password)
-			console.log('handleCreateWallet: Wallet created, getting account...')
+			// console.log('handleCreateWallet: Wallet created, getting account...')
 			const account = await wallet.getAccount(0)
-			console.log('handleCreateWallet: Got account, getting address...')
+			// console.log('handleCreateWallet: Got account, getting address...')
 			const address = await account.getAddress()
-			console.log('handleCreateWallet: Got address:', address)
+			// console.log('handleCreateWallet: Got address:', address)
 			return {
 				success: true,
 				data: address,
@@ -100,11 +100,11 @@ export class MessageHandler {
 		message: ImportWalletMessage,
 	): Promise<MessageResponse<string>> {
 		try {
-			console.log('handleImportWallet: Importing wallet...')
+			// console.log('handleImportWallet: Importing wallet...')
 			const wallet = await this.session.import(message.mnemonic, message.password)
 			const account = await wallet.getAccount(0)
 			const address = await account.getAddress()
-			console.log('handleImportWallet: Wallet imported, address:', address)
+			// console.log('handleImportWallet: Wallet imported, address:', address)
 			return {
 				success: true,
 				data: address,
@@ -123,11 +123,11 @@ export class MessageHandler {
 		message: UnlockWalletMessage,
 	): Promise<MessageResponse<string>> {
 		try {
-			console.log('handleUnlockWallet: Unlocking wallet...')
+			// console.log('handleUnlockWallet: Unlocking wallet...')
 			const wallet = await this.session.unlock(message.password)
 			const account = await wallet.getAccount(0)
 			const address = await account.getAddress()
-			console.log('handleUnlockWallet: Wallet unlocked, address:', address)
+			// console.log('handleUnlockWallet: Wallet unlocked, address:', address)
 			return {
 				success: true,
 				data: address,
@@ -146,7 +146,7 @@ export class MessageHandler {
 		_message: LockWalletMessage,
 	): Promise<MessageResponse<void>> {
 		try {
-			console.log('handleLockWallet: Locking wallet...')
+			// console.log('handleLockWallet: Locking wallet...')
 			await this.session.lock()
 			return {
 				success: true,
@@ -189,7 +189,7 @@ export class MessageHandler {
 			if (!wallet) {
 				return {
 					success: false,
-					error: 'No wallet created',
+					error: 'Wallet is locked or not available',
 				}
 			}
 
@@ -208,15 +208,15 @@ export class MessageHandler {
 	}
 
 	private async handleGetBalance(
-		message: GetBalanceMessage,
+		_message: GetBalanceMessage,
 	): Promise<MessageResponse<string>> {
 		try {
-			console.log('[MessageHandler] currentChainId:', this.currentChainId)
+			// console.log('[MessageHandler] currentChainId:', this.currentChainId)
 			const wallet = this.session.get()
 			if (!wallet) {
 				return {
 					success: false,
-					error: 'No wallet created',
+					error: 'Wallet is locked or not available',
 				}
 			}
 
@@ -265,7 +265,7 @@ export class MessageHandler {
 	private async handleSwitchChain(
 		message: SwitchChainMessage,
 	): Promise<MessageResponse<number>> {
-		console.log('[MessageHandler] currentChainId:', this.currentChainId)
+		// console.log('[MessageHandler] currentChainId:', this.currentChainId)
 		try {
 			// SECURITY: Require unlocked wallet before allowing network switch
 			if (!this.session.isUnlocked()) {
@@ -283,8 +283,8 @@ export class MessageHandler {
 				}
 			}
 
-			this.currentChainId = message.chainId
 			await this.session.updateNetwork(message.chainId)
+			this.currentChainId = message.chainId
 
 			return {
 				success: true,

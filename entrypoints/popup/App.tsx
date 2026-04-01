@@ -77,9 +77,9 @@ function App() {
 	useEffect(() => {
 		const init = async () => {
 			try {
-				console.log('[POPUP] Testing background connection...')
+				// console.log('[POPUP] Testing background connection...')
 				const pingResponse = await chrome.runtime.sendMessage({ type: 'ping' })
-				console.log('[POPUP] Ping response:', pingResponse)
+				// console.log('[POPUP] Ping response:', pingResponse)
 
 				if (!pingResponse || !pingResponse.pong) {
 					console.error('[POPUP] Background not responding!')
@@ -89,7 +89,7 @@ function App() {
 					return
 				}
 
-				console.log('[POPUP] ✓ Background connection OK')
+				// console.log('[POPUP] ✓ Background connection OK')
 			} catch (error) {
 				console.error('[POPUP] Ping failed:', error)
 				alert(
@@ -102,7 +102,7 @@ function App() {
 				const existsResponse = await chrome.runtime.sendMessage({
 					type: 'checkWalletExists',
 				})
-				console.log('[POPUP] checkWalletExists response:', existsResponse)
+				// console.log('[POPUP] checkWalletExists response:', existsResponse)
 				const walletExists = existsResponse?.success
 					? existsResponse.data
 					: false
@@ -112,7 +112,7 @@ function App() {
 					const response = await chrome.runtime.sendMessage({
 						type: 'getAddress',
 					})
-					console.log('[POPUP] getAddress response:', response)
+					// console.log('[POPUP] getAddress response:', response)
 					if (response?.success && response?.data) {
 						setAddress(response.data)
 						const chainResponse = await chrome.runtime.sendMessage({
@@ -122,13 +122,13 @@ function App() {
 							setCurrentChainId(chainResponse.data)
 						}
 					} else {
-						console.log('[POPUP] Wallet exists but is locked')
+						// console.log('[POPUP] Wallet exists but is locked')
 					}
 				} else {
-					console.log('[POPUP] No wallet exists yet')
+					// console.log('[POPUP] No wallet exists yet')
 				}
 			} catch (error) {
-				console.log('[POPUP] Error during init:', error)
+				// console.log('[POPUP] Error during init:', error)
 				setWalletExists(false)
 			}
 		}
@@ -139,7 +139,7 @@ function App() {
 	useEffect(() => {
 		const handleMessage = (message: { type: string; chainId?: number }) => {
 			if (message.type === 'chainChanged' && message.chainId) {
-				console.log('[POPUP] Chain changed event received:', message.chainId)
+				// console.log('[POPUP] Chain changed event received:', message.chainId)
 				setCurrentChainId(message.chainId)
 			}
 		}
@@ -186,12 +186,12 @@ function App() {
 	const handleCreateWallet = async (password: string) => {
 		setIsLoading(true)
 		try {
-			console.log('[POPUP] Creating wallet...')
+			// console.log('[POPUP] Creating wallet...')
 			const response = await chrome.runtime.sendMessage({
 				type: 'createWallet',
 				password,
 			})
-			console.log('[POPUP] Received response:', response)
+			// console.log('[POPUP] Received response:', response)
 
 			if (!response?.success) {
 				console.error('[POPUP] Error from background:', response?.error)
@@ -200,7 +200,7 @@ function App() {
 			}
 
 			if (response?.data) {
-				console.log('[POPUP] Setting address:', response.data)
+				// console.log('[POPUP] Setting address:', response.data)
 				setAddress(response.data)
 				setCurrentChainId(DEFAULT_CHAIN_ID)
 				setWalletExists(true)
@@ -221,14 +221,14 @@ function App() {
 	const handleImportWallet = async (mnemonic: string, password: string) => {
 		setIsLoading(true)
 		try {
-			console.log('[POPUP] Importing wallet...')
+			// console.log('[POPUP] Importing wallet...')
 			const normalizedMnemonic = mnemonic.replace(/\s+/g, ' ').trim()
 			const response = await chrome.runtime.sendMessage({
 				type: 'importWallet',
 				mnemonic: normalizedMnemonic,
 				password,
 			})
-			console.log('[POPUP] Received response:', response)
+			// console.log('[POPUP] Received response:', response)
 
 			if (!response?.success) {
 				console.error('[POPUP] Error from background:', response?.error)
@@ -237,7 +237,7 @@ function App() {
 			}
 
 			if (response?.data) {
-				console.log('[POPUP] Setting address:', response.data)
+				// console.log('[POPUP] Setting address:', response.data)
 				setAddress(response.data)
 				setCurrentChainId(DEFAULT_CHAIN_ID)
 				setWalletExists(true)
@@ -259,12 +259,12 @@ function App() {
 		setIsLoading(true)
 		setUnlockError('')
 		try {
-			console.log('[POPUP] Unlocking wallet...')
+			// console.log('[POPUP] Unlocking wallet...')
 			const response = await chrome.runtime.sendMessage({
 				type: 'unlockWallet',
 				password,
 			})
-			console.log('[POPUP] Unlock response:', response)
+			// console.log('[POPUP] Unlock response:', response)
 
 			if (!response?.success) {
 				console.error('[POPUP] Error from background:', response?.error)
@@ -273,7 +273,7 @@ function App() {
 			}
 
 			if (response?.data) {
-				console.log('[POPUP] Wallet unlocked, setting address:', response.data)
+				// console.log('[POPUP] Wallet unlocked, setting address:', response.data)
 				setAddress(response.data)
 				setCurrentChainId(DEFAULT_CHAIN_ID)
 			} else {
@@ -292,15 +292,27 @@ function App() {
 
 	const handleLockWallet = async () => {
 		try {
-			console.log('[POPUP] Locking wallet...')
+			// console.log('[POPUP] Locking wallet...')
 			const response = await chrome.runtime.sendMessage({
 				type: 'lockWallet',
 			})
-			console.log('[POPUP] Lock response:', response)
+			// console.log('[POPUP] Lock response:', response)
 
 			if (response?.success) {
 				setAddress(null)
-				console.log('[POPUP] Wallet locked')
+				setBalance('0')
+				setTxResult(null)
+				setParsedIntent(null)
+				setPendingIntent(null)
+				setRevealPassword('')
+				setMnemonic('')
+				setRevealError('')
+				setCopied(false)
+				setCopiedHash(null)
+				setShowReveal(false)
+				setShowAllHistory(false)
+				setTxHistory([])
+				// // console.log('[POPUP] Wallet locked')
 			} else {
 				console.error('[POPUP] Failed to lock wallet:', response?.error)
 				alert(`Failed to lock wallet: ${response?.error || 'Unknown error'}`)
@@ -422,68 +434,32 @@ function App() {
 
 	const handleCancelIntent = () => {
 		setPendingIntent(null)
+		setTxResult(null)
 	}
 
 	const handleParseVoiceInput = async () => {
 		setTxResult(null)
+		setPendingIntent(null)
 		setIsParsing(true)
+	
 		try {
 			const normalizedInput = voiceInput.replace(/\s+/g, ' ').trim()
 			const intentObject = await parseIntentWithAI(normalizedInput)
 	
 			setParsedIntent(intentObject)
-			
-			if (intentObject.action == 'unknown'){
+	
+			if (intentObject.action === 'unknown') {
 				setTxResult({
 					status: 'failed',
 					error: 'Command not recognized. Try "send 0.0001 ETH to 0x..."',
 				})
 				return
 			}
-
-			setPendingIntent(intentObject)
 	
-			const response = await chrome.runtime.sendMessage({
-				type: 'VOICE_INTENT',
-				payload: intentObject,
-			})
-
-			console.log('VOICE_INTENT response:', response)
-
-			const networkName =
-			NETWORKS.find((n) => n.chainId === currentChainId)?.name || 'Unknown Network'
-
-			if (response?.success) {
-			setTxResult({
-				status: 'sent',
-				hash: response?.data?.hash,
-				amount: intentObject.amount,
-				to: intentObject.to,
-				networkName,
-			})
-
-			if (response?.data?.hash && intentObject.amount && intentObject.to) {
-				await TransactionStorage.add({
-				hash: response.data.hash,
-				amount: intentObject.amount,
-				to: intentObject.to,
-				chainId: currentChainId,
-				networkName,
-				status: 'sent',
-				timestamp: Date.now(),
-				})
-				const records = await TransactionStorage.list()
-				setTxHistory(records)
-			}
-			}
-			else{
-				setTxResult({
-					status: 'failed',
-					error: response?.error || 'Execution failed'
-				})
-			}
+			setPendingIntent(intentObject)
 		} catch (error) {
 			console.error('AI parsing failed:', error)
+	
 			setTxResult({
 				status: 'failed',
 				error: 'Could not parse command. Please try again.',
@@ -495,6 +471,7 @@ function App() {
 			}
 	
 			setParsedIntent(fallbackIntent)
+			setPendingIntent(null)
 		} finally {
 			setIsParsing(false)
 		}
@@ -739,7 +716,13 @@ function App() {
 						<Button
 							variant="outline"
 							className="w-full"
-							onClick={() => setShowReveal(true)}
+							onClick={() => {
+								setShowReveal(true)
+								setRevealPassword('')
+								setMnemonic('')
+								setRevealError('')
+								setCopied(false)
+							}}
 							>
 							Show Recovery Phrase
 						</Button>

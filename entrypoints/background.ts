@@ -12,7 +12,7 @@ class ExpectedUserError extends Error {
 }
 
 export default defineBackground(() => {
-	console.log('=== BACKGROUND SCRIPT STARTING ===')
+	// console.log('=== BACKGROUND SCRIPT STARTING ===')
 
 	let session: WalletSession
 	let messageHandler: MessageHandler
@@ -47,10 +47,6 @@ export default defineBackground(() => {
 		const wallet = session.get()
 
 		if (!wallet) {
-			return { success: false, error: 'Wallet is locked' }
-		}
-
-		if (!wallet) {
 			return {
 				success: false,
 				error: 'Wallet is locked or not created',
@@ -59,8 +55,8 @@ export default defineBackground(() => {
 
 		const account = await wallet.getAccount(0)
 
-		console.log('ACCOUNT OBJECT:', account)
-		console.log('ACCOUNT KEYS:', Object.keys(account))
+		// console.log('ACCOUNT OBJECT:', account)
+		// console.log('ACCOUNT KEYS:', Object.keys(account))
 
 		if (Number.isNaN(Number(amount)) || Number(amount) <= 0){
 			return {
@@ -82,11 +78,11 @@ export default defineBackground(() => {
 			value: parseEther(amount),
 		}
 
-		console.log('--- PREPARIING SEND TX ===', tx)
+		// console.log('--- PREPARIING SEND TX ===', tx)
 
 		const result = await account.sendTransaction(tx)
 
-		console.log('=== TX SENT ===', result)
+		// console.log('=== TX SENT ===', result)
 
 		return {
 			success: true,
@@ -111,19 +107,14 @@ export default defineBackground(() => {
 
 	chrome.alarms.onAlarm.addListener(async (alarm) => {
 		if (alarm.name === AUTO_LOCK_ALARM && session.isUnlocked()) {
-			console.log('=== AUTO-LOCK: Locking wallet after inactivity ===')
+			// console.log('=== AUTO-LOCK: Locking wallet after inactivity ===')
 			await session.lock()
 		}
 	})
 
-	async function init(){
+	async function init() {
 		try {
-	
-			const restored = await session.restore()
-			if (restored) {
-				console.log('=== SESSION RESTORED ===')
-				await resetAutoLockAlarm()
-			}
+			// console.log('=== BACKGROUND INIT ===')
 		} catch (error) {
 			console.error('=== FATAL: Failed to initialize ===', error)
 			throw error
@@ -139,7 +130,7 @@ export default defineBackground(() => {
 			_sender,
 			sendResponse: (response: any) => void,
 		) => {
-			console.log('=== MESSAGE RECEIVED ===', message)
+			// console.log('=== MESSAGE RECEIVED ===', message)
 
 			resetAutoLockAlarm().catch(console.error)
 
@@ -149,7 +140,7 @@ export default defineBackground(() => {
 			}
 
 			if ((message as any).type == 'VOICE_INTENT'){
-				console.log('=== VOICE_INTENT RECEIVED ===', message.payload)
+				// console.log('=== VOICE_INTENT RECEIVED ===', message.payload)
 
 				handleVoiceIntent(message.payload)
 				.then((result) => {
@@ -165,22 +156,22 @@ export default defineBackground(() => {
 			}
 
 			if ((message as any).type === 'PROVIDER_REQUEST') {
-				console.log(
-					'=== PROVIDER_REQUEST from dApp ===',
-					message.method,
-					'params:',
-					message.params,
-				)
+				// console.log(
+				// 	'=== PROVIDER_REQUEST from dApp ===',
+				// 	message.method,
+				// 	'params:',
+				// 	message.params,
+				// )
 				handleProviderRequest(message.method, message.params || [])
 					.then((result) => {
-						console.log(
-							'=== Provider result (SUCCESS) ===',
-							result,
-							'type:',
-							typeof result,
-							'isArray:',
-							Array.isArray(result),
-						)
+						// console.log(
+						// 	'=== Provider result (SUCCESS) ===',
+						// 	result,
+						// 	'type:',
+						// 	typeof result,
+						// 	'isArray:',
+						// 	Array.isArray(result),
+						// )
 						sendResponse(result)
 					})
 					.catch((error) => {
@@ -206,21 +197,24 @@ export default defineBackground(() => {
 				return true
 			}
 
-			console.log('=== Calling messageHandler.handle() ===')
+			// console.log('=== Calling messageHandler.handle() ===')
 			messageHandler
 				.handle(message)
 				.then((response) => {
-					console.log('=== MessageHandler response ===', response)
+					// console.log('=== MessageHandler response ===', response)
 
 					if (!response.success) {
 						const isExpectedError =
-							response.error === 'No wallet created' ||
-							response.error?.includes('No wallet found')
-
+							response.error?.includes('No wallet found') ||
+							response.error?.includes('No wallet created') ||
+							response.error?.includes('Wallet is locked') ||
+							response.error?.includes('not available') ||
+							response.error?.includes('No unlocked wallet')
+					
 						if (!isExpectedError) {
 							console.error('=== Handler returned error ===', response.error)
 						}
-
+					
 						sendResponse({ success: false, error: response.error })
 						return
 					}
@@ -254,7 +248,7 @@ export default defineBackground(() => {
 		method: string,
 		params: unknown[],
 	): Promise<unknown> {
-		console.log(`=== Handling ${method} ===`)
+		// console.log(`=== Handling ${method} ===`)
 
 		switch (method) {
 			case 'eth_chainId': {
@@ -263,39 +257,39 @@ export default defineBackground(() => {
 			}
 
 			case 'eth_accounts': {
-				console.log('=== eth_accounts: checking wallet ===')
+				// console.log('=== eth_accounts: checking wallet ===')
 				const wallet = session.get()
-				console.log('=== Wallet exists? ===', !!wallet)
+				// console.log('=== Wallet exists? ===', !!wallet)
 				if (!wallet) {
-					console.log('=== No wallet, returning empty array ===')
+					// console.log('=== No wallet, returning empty array ===')
 					return []
 				}
-				console.log('=== Getting account 0 ===')
+				// console.log('=== Getting account 0 ===')
 				const account = await wallet.getAccount(0)
 				const address = await account.getAddress()
-				console.log('=== Returning address ===', address)
+				// console.log('=== Returning address ===', address)
 				return [address]
 			}
 
 			case 'eth_requestAccounts': {
-				console.log('=== eth_requestAccounts: checking wallet ===')
+				// console.log('=== eth_requestAccounts: checking wallet ===')
 				const wallet = session.get()
-				console.log('=== Wallet exists? ===', !!wallet)
+				// console.log('=== Wallet exists? ===', !!wallet)
 				if (!wallet) {
 					console.warn(
 						'=== No wallet created - user needs to create wallet ===',
 					)
 					throw new ExpectedUserError(
-						'No wallet created. Please create a wallet first.',
+						'No unlocked wallet available. Please unlock or create a wallet first.',
 					)
 				}
-				console.log('=== Getting account 0 ===')
+				// console.log('=== Getting account 0 ===')
 				const account = await wallet.getAccount(0)
-				console.log('=== Account retrieved, getting address ===')
+				// console.log('=== Account retrieved, getting address ===')
 				const address = await account.getAddress()
-				console.log('=== Address retrieved ===', address)
+				// console.log('=== Address retrieved ===', address)
 				const result = [address]
-				console.log('=== Returning result ===', result)
+				// console.log('=== Returning result ===', result)
 				return result
 			}
 
@@ -343,5 +337,5 @@ export default defineBackground(() => {
 		}
 	}
 
-	console.log('=== BACKGROUND SCRIPT READY ===')
+	// console.log('=== BACKGROUND SCRIPT READY ===')
 })
