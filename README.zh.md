@@ -243,3 +243,14 @@ Voice Wallet 是自托管钱包。
 - Demo Video: (coming soon)
 - Chrome Web Store: (coming soon)
 - WDK Showcase: (coming soon)
+
+## 许可证与致谢
+
+### 许可证
+
+本项目采用 MIT 许可证开源。详见 [LICENSE](./LICENSE) 文件。
+
+### 致谢
+
+本项目基于 WDK Starter Browser Extension（Apache-2.0 协议）开发。  
+部分实现与架构设计参考了 WDK 生态及其相关开源组件。

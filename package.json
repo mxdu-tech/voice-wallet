@@ -1,19 +1,27 @@
 {
-  "name": "@base58-io/wdk-starter-browser-extension",
-  "description": "A browser extension starter template for the WDK ecosystem.",
+  "name": "voice-wallet",
+  "description": "A lightweight self-custodial browser wallet for EVM networks with natural-language transaction support.",
   "keywords": [
-    "wdk",
+    "web3",
     "wallet",
-    "browser",
-    "extension"
+    "wdk",
+    "wallet-development-kit",
+    "browser-extension",
+    "chrome-extension",
+    "evm",
+    "defi",
+    "crypto",
+    "react",
+    "typescript"
   ],
-  "author": "Base58 <contact@base58.io> (https://base58.io)",
-  "license": "Apache-2.0",
+  "author": "M.X Du (https://github.com/mxdu-tech)",
+  "license": "MIT",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/base58-io/wdk-starter-browser-extension.git"
+    "url": "https://github.com/mxdu-tech/voice-wallet.git"
   },
+  "version": "0.1.0",
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",

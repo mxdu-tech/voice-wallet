@@ -276,3 +276,20 @@ Any loss due to misuse, exposure, or environment risk is the user's responsibili
 - Demo Video: （待补充）
 - Chrome Web Store: （待补充）
 - WDK Showcase: （待补充）
+
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+See the [LICENSE](./LICENSE) file for details.
+
+---
+
+## Attribution
+
+This project is built upon the WDK Starter Browser Extension (Apache-2.0).
+
+Portions of the original implementation and structure are derived from the WDK ecosystem and its associated open-source components.

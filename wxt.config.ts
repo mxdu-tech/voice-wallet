@@ -3,10 +3,17 @@ import path from 'path'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { defineConfig } from 'wxt'
 
-// See https://wxt.dev/api/config.html
+
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
+    name: 'Voice Wallet',
+    short_name: 'Voice Wallet',
+    description: 'Speak to Pay. A lightweight self-custodial browser wallet for EVM networks with natural-language transaction support.',
+    version: '0.1.0',
+    action: {
+      default_title: 'Voice Wallet'
+    },
     permissions: ['storage', 'alarms'],
     content_security_policy: {
       extension_pages:
