@@ -130,8 +130,8 @@ Planned improvements include:
 
 ## Demo
 
-- Demo Video: Coming soon  
-- Chrome Extension Preview: Coming soon  
+Watch the demo video:
+- Demo Video: https://youtu.be/CS7R_RBFGTI
 
 ---
 
@@ -272,7 +272,7 @@ Any loss due to misuse, exposure, or environment risk is the user's responsibili
 ## Links (to be added)
 
 - GitHub Repository: [Voice Wallet](https://github.com/your-username/voice-wallet)
-- Demo Video: （待补充）
+- Demo Video: https://youtu.be/CS7R_RBFGTI
 - Chrome Web Store: （待补充）
 
 

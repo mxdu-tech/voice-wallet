@@ -126,8 +126,8 @@ Voice Wallet 的设计目标：
 
 ## 演示
 
-- Demo 视频：待补充  
-- 扩展示例：待补充  
+项目演示视频：
+- https://youtu.be/CS7R_RBFGTI
 
 ---
 
