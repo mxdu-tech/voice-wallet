@@ -7,7 +7,8 @@
 ---
 
 ## Demo Video
- https://youtu.be/CS7R_RBFGTI
+
+[![Voice Wallet Demo](https://img.youtube.com/vi/CS7R_RBFGTI/hqdefault.jpg)](https://youtu.be/CS7R_RBFGTI)
 
 ## What It Is
 

@@ -6,7 +6,7 @@
 ---
 ## 🎥 演示视频
 
-https://youtu.be/CS7R_RBFGTI
+[![Voice Wallet Demo](https://img.youtube.com/vi/CS7R_RBFGTI/hqdefault.jpg)](https://youtu.be/CS7R_RBFGTI)
 ## 项目简介
 
 Voice Wallet 是一个浏览器扩展钱包，支持用户创建或导入钱包、本地解锁、解析自然语言转账指令，并在确认后执行链上交易。
