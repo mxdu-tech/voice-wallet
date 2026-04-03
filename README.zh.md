@@ -242,7 +242,6 @@ Voice Wallet 是自托管钱包。
 - GitHub Repository: https://github.com/mxdu-tech/voice-wallet
 - Demo Video: (coming soon)
 - Chrome Web Store: (coming soon)
-- WDK Showcase: (coming soon)
 
 ## 许可证与致谢
 
