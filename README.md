@@ -202,7 +202,6 @@ npm run build
 - Load unpacked  
 - Select build output  
 
----
 
 ---
 
@@ -275,7 +274,6 @@ Any loss due to misuse, exposure, or environment risk is the user's responsibili
 - GitHub Repository: [Voice Wallet](https://github.com/your-username/voice-wallet)
 - Demo Video: （待补充）
 - Chrome Web Store: （待补充）
-- WDK Showcase: （待补充）
 
 
 ---
