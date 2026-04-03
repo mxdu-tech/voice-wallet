@@ -6,6 +6,9 @@
 
 ---
 
+## Demo Video
+ https://youtu.be/CS7R_RBFGTI
+
 ## What It Is
 
 Voice Wallet is a lightweight browser extension wallet designed for EVM networks.  
@@ -126,12 +129,6 @@ Planned improvements include:
 - Fine-grained permission control  
 - Stronger security hardening  
 
----
-
-## Demo
-
-Watch the demo video:
-- Demo Video: https://youtu.be/CS7R_RBFGTI
 
 ---
 
