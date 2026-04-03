@@ -5,6 +5,7 @@
 > 一个面向 EVM 网络的轻量级自托管浏览器钱包，聚焦自然语言驱动的交易交互与本地优先安全模型。
 ---
 ## 🎥 演示视频
+https://youtu.be/CS7R_RBFGTI
 
 [![Voice Wallet Demo](https://img.youtube.com/vi/CS7R_RBFGTI/hqdefault.jpg)](https://youtu.be/CS7R_RBFGTI)
 ## 项目简介
