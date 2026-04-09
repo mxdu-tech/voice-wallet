@@ -77,5 +77,4 @@ We may update this Privacy Policy from time to time. Updates will be reflected o
 
 If you have any questions, please contact:
 
-Email: lindev.work@gmail.com
 GitHub: https://github.com/mxdu-tech
