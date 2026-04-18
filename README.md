@@ -267,6 +267,13 @@ Blockchain transactions are irreversible.
 Any loss due to misuse, exposure, or environment risk is the user's responsibility.
 
 ---
+### Architecture & Knowledge Map
+
+![Architecture](./architecture.png)
+
+This diagram illustrates the system’s layered architecture and the relationships between core components.
+
+---
 
 ## Links (to be added)
 
